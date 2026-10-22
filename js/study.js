@@ -28,6 +28,7 @@
     else if (mode === "calc") pool = pool.filter(q => q.type === "calc");
     else if (mode === "visual") pool = pool.filter(q => q.type === "figure" || q.type === "table");
     else if (mode === "recall") pool = pool.filter(q => q.type === "recall" || q.type === "concept");
+    else if (mode === "mixed") pool = pool.filter(q => String(q.id).startsWith("x-"));
     else if (mode === "missed") pool = pool.filter(q => card(q.id) && card(q.id).w > 0 && card(q.id).b < 3);
     if (mode === "review") {
       const due = shuffle(pool.filter(q => isDue(q.id, now))).sort((a, b) => card(a.id).b - card(b.id).b);
@@ -75,6 +76,7 @@
       ["review", "Daily review", "Questions due for review, then new ones. Best way to remember."],
       ["all", "Practice", "A mix of every type from the chapters you pick."],
       ["scenario", "Grower scenarios", "Answer the way you would on a farm call."],
+      ["mixed", "Whole-farm grower calls", "Problems that cross chapters: soil, ET, scheduling, system and pump together."],
       ["calc", "Formulas", "Work the equations with real numbers."],
       ["visual", "Figures and tables", "Read the book's charts and tables."],
       ["recall", "Terms and concepts", "Definitions, typical values, why things happen."],
