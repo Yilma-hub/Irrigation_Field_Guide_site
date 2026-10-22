@@ -576,25 +576,44 @@
   }
 
   function viewUnits() {
+    const UN = window.UNIT_NOTES || { dims: {}, units: {} };
     const dims = Object.entries(U.dims).filter(([k, d]) => d.units.length > 1 && !["count", "kgper", "energyvol", "rpm"].includes(k));
     const st = store.get("conv", { dim: "flow", v: 1, from: "gpm" });
     if (!U.dims[st.dim]) st.dim = "flow";
-    main.innerHTML = `<div><h1>Unit converter</h1>
+    main.innerHTML = `<div class="convpage"><h1>Unit converter</h1>
       <div class="conv">
         <div><label for="cdim">Quantity</label><select id="cdim">${dims.map(([k, d]) => `<option value="${k}"${k === st.dim ? " selected" : ""}>${esc(d.label)}</option>`).join("")}</select></div>
         <div class="row"><div><label for="cval">Value</label><input id="cval" inputmode="decimal" value="${esc(st.v)}"></div><div><label for="cfrom">From</label><select id="cfrom"></select></div></div>
       </div>
-      <table class="convall" id="call"></table>
+      <div id="cabout"></div>
+      <div id="call" class="convlist"></div>
       <h2>Book conversions (pages xxi and xxii)</h2>
       ${(window.BOOK_CONVERSIONS && window.BOOK_CONVERSIONS.length) ? renderBookConv() : ""}
       ${B.units_pages.map(p => `<figure class="tablefig">${imgTag(p.img, "Common unit conversions, page " + p.page)}<figcaption>As printed, page ${p.page}</figcaption></figure>`).join("")}
-      <p class="credit">${CREDIT}</p></div>`;
+      <p class="credit">Unit notes were written for this guide. ${CREDIT}</p></div>`;
     const dimSel = $("#cdim"), from = $("#cfrom"), val = $("#cval");
     function fill() { from.innerHTML = unitOptions(dimSel.value, U.unitsOf(dimSel.value).includes(st.from) ? st.from : U.unitsOf(dimSel.value)[0]); }
+    const sig = x => { if (!isFinite(x)) return "–"; const a = Math.abs(x); return a !== 0 && (a >= 1e6 || a < 1e-3) ? x.toExponential(4).replace(/e([+-])(\d+)/, (m, sg, d) => " × 10" + (sg === "-" ? "⁻" : "") + String(+d).split("").map(c => "⁰¹²³⁴⁵⁶⁷⁸⁹"[c]).join("")) : (+x.toPrecision(6)).toLocaleString(undefined, { maximumFractionDigits: 6 }); };
     function draw() {
       const x = parseFloat(String(val.value).replace(/,/g, ""));
       st.dim = dimSel.value; st.from = from.value; st.v = val.value; store.set("conv", st);
-      $("#call").innerHTML = isFinite(x) ? U.unitsOf(st.dim).map(u => `<tr><td>${fmt(U.convert(st.dim, x, st.from, u), 5)}</td><td>${esc(u)}</td></tr>`).join("") : `<tr><td colspan="2">Enter a number.</td></tr>`;
+      const dn = UN.dims[st.dim], un = UN.units[st.dim] || {};
+      $("#cabout").innerHTML = dn ? `<div class="fielduse"><h2>${esc(U.dims[st.dim].label)}</h2><p>${esc(dn.about)}</p></div>` : "";
+      if (!isFinite(x)) { $("#call").innerHTML = `<p class="empty">Enter a number.</p>`; return; }
+      const fN = un[st.from] || {};
+      $("#call").innerHTML = U.unitsOf(st.dim).map(u => {
+        const n = un[u] || {};
+        const one = U.convert(st.dim, 1, st.from, u);
+        const factor = st.dim === "temp" ? "" : `<p class="cf"><b>Factor used:</b> 1 ${esc(st.from)} = ${sig(one)} ${esc(u)}${one !== 0 && u !== st.from ? `, so 1 ${esc(u)} = ${sig(1 / one)} ${esc(st.from)}` : ""}. The value is ${esc(val.value)} × ${sig(one)}.</p>`;
+        return `<details class="cu${u === st.from ? " src" : ""}"><summary><span class="cv">${fmt(U.convert(st.dim, x, st.from, u), 5)}</span><span class="cn"><b>${esc(u)}</b>${n.name ? `<small>${esc(n.name)}</small>` : ""}</span></summary>
+          <div class="cbody">
+            ${n.what ? `<p><b>What it is:</b> ${esc(n.what)}</p>` : ""}
+            ${n.use ? `<p><b>Where it is used:</b> ${esc(n.use)}</p>` : ""}
+            ${n.def ? `<p><b>How it is defined:</b> ${esc(n.def)}</p>` : ""}
+            ${factor}
+            ${u !== st.from && fN.def ? `<p class="cf2"><b>${esc(st.from)}:</b> ${esc(fN.def)}</p>` : ""}
+          </div></details>`;
+      }).join("");
     }
     fill(); draw();
     dimSel.onchange = () => { fill(); draw(); }; from.onchange = draw; val.oninput = draw;
