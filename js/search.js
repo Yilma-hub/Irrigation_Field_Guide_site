@@ -103,13 +103,18 @@
       add({ type: "calc", title: c.title, tags: c.tags.join("; ") + "; " + c.eq.map(e => "equation " + e + " eq " + e).join(" ") + (c.tables || []).map(t => " table " + t).join(""), body: io + " " + (c.note || ""), route: `#/c/${c.id}`, id: c.id, w: 1.9, calc: c });
     }
     for (const g of B.glossary) add({ type: "gloss", title: g.term, body: plain(g.html), route: `#/glossary`, anchor: "g-" + slug(g.term), w: 1.4, gloss: g });
+    for (const d of (G.DE_DOCS || [])) {
+      for (const sec of (d.sections || [])) add({ type: "de", title: sec.h, tags: d.short + "; Delaware; " + (sec.tags || []).join("; "), body: plain(sec.html), route: `#/de/${d.id}`, anchor: "ds-" + sec.id, w: 1.6, de: d, sec });
+      for (const f of (d.facts || [])) add({ type: "defact", title: f.q, tags: d.short + "; Delaware; " + (f.tags || []).join("; "), body: f.a, route: `#/de/${d.id}`, anchor: "facts", w: 2.0, de: d, fact: f });
+      for (const t of (d.tables || [])) add({ type: "de", title: t.title, tags: d.short + "; Delaware table; " + (t.cols || []).join("; "), body: (t.rows || []).map(r => (Array.isArray(r) ? r : Object.values(r)).join(" ")).join("; "), route: `#/de/${d.id}`, anchor: "dt-" + t.id, w: 1.5, de: d, table: t });
+    }
     for (const n of (G.FIELDNOTES || [])) add({ type: "note", title: n.q, tags: (n.alt || []).join("; ") + "; " + (n.tags || []).join("; "), body: plain(n.a), route: `#/answer/${n.id}`, w: 2.2, note: n });
   }
   function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
 
   function query(q, userNotes) {
     const raw = String(q || "").trim();
-    const res = { direct: [], calc: [], text: [], table: [], figure: [], example: [], gloss: [], note: [], user: [], section: [] };
+    const res = { direct: [], calc: [], text: [], table: [], figure: [], example: [], gloss: [], note: [], user: [], section: [], de: [], defact: [] };
     if (!raw) return res;
     // direct references: "table 7.2", "fig 2.6", "eq 4.4", "example 6.5", "section 6.4"
     const dm = raw.toLowerCase().match(/\b(table|tab|figure|fig|equation|eq|example|ex|section|sec)\.?\s*(\d{1,2}\.\d{1,2}[a-d]?)/);

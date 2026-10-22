@@ -1,0 +1,81 @@
+window.DE_DOCS = (window.DE_DOCS || []).concat([{
+  id: "sare-lne12-314",
+  title: "Improving water and nitrogen use efficiency using soil moisture monitoring to improve irrigation management (SARE LNE12-314)",
+  short: "SARE LNE12-314 (Adkins)",
+  org: "Northeast SARE, University of Delaware (project leader James Adkins)",
+  year: 2016,
+  url: "https://projects.sare.org/project-reports/lne12-314/",
+  license: "summarized",
+  summary: "Three seasons (2013 to 2015) of wireless Watermark soil moisture stations in 15 to 20 grower corn fields per year in Delaware. It is the main Delaware record of how growers actually used sensor data, how to place and install sensors in Delmarva soils, what the system cost, and why sensors did not catch on for field crops in a humid region.",
+  sections: [
+    { id: "background", h: "Delaware irrigation background",
+      html: "<ul><li>About 105,000 irrigated acres in Delaware (2007 USDA census). A 2010 GIS layer counted 2,026 center pivots on 113,000 acres.</li><li>Center pivots irrigate over 85% of irrigated acres.</li><li>Most growers scheduled with the ET checkbook method, using reference ET from 32 DEOS weather stations (at the time).</li><li>NRCS and UD tests of more than 400 center pivots (about 25,000 acres) found over 50% applied less than 80% of the water shown on the manufacturer's calibration chart. A checkbook that trusts the chart will over credit irrigation on those systems.</li><li>A 2009 to 2011 pilot with 3 Sussex County growers came before this project. Manual data download then took 20 to 30 minutes per visit.</li></ul>",
+      calcs: ["catch-can", "eq-13.7-inv", "meter-depth"], book: ["5.4", "13.5", "6.4"], tags: ["center pivot", "pivot calibration", "checkbook", "Delaware"] },
+    { id: "equipment", h: "Sensor system used",
+      html: "<ul><li>Sensors: Irrometer Watermark granular matrix (matric potential) sensors.</li><li>System: Watermark 950T wireless transmitters sending to a 950R central receiver and logger, upgraded with a cell modem that posted data to the maker's web reporting site.</li><li>Each station transmitted about 10 to 15 times per day, viewable online in near real time.</li><li>Cell signal was adequate at all 54 sites tested over three years.</li></ul><p>The reports do not give the centibar trigger values growers were told to use. Growers read the data and made their own decisions.</p>",
+      calcs: [], book: ["2.10"], tags: ["Watermark", "granular matrix sensor", "telemetry", "data logger"] },
+    { id: "placement", h: "Station placement and depths",
+      html: "<ul><li>4 stations per field: 1 in the lightest (highest) soil, 1 in the heaviest (lowest) soil, and 2 in the main soil type.</li><li>3 sensors per station at 6, 12 and 18 inches below the surface.</li><li>Installed late May to early June, removed early September just before harvest.</li><li>Project staff did all installation and upkeep and contacted each grower weekly.</li></ul><p>This layout brackets the field: the light soil station shows when to start, the heavy soil station shows where water may be in excess, and the two main soil stations drive the decision.</p>",
+      calcs: ["swd-fcobs", "tab-6.5"], book: ["2.10", "6.4"], tags: ["sensor placement", "depth", "soil variability"] },
+    { id: "install", h: "Installation lessons",
+      html: "<ul><li>Sands: bore an undersized hole and press fit the sensor. This gave good contact.</li><li>Heavier soils (gravel, clay, silt): bore an oversized hole and set the sensor in a slurry made from the removed soil. One 2014 field read extremely dry while field checks showed adequate moisture, because of poor contact in tight gravelly soil. The slurry method was adopted in 2015.</li><li>Kent County sites (heavier soils, north) gave erratic data compared with sandier Sussex County sites.</li><li>Receiver failures early in 2013 came from an antenna jack seal installed wrong at the factory, letting water reach the circuits. One transmitter was lost to lightning.</li><li>Growers estimated 8 to 12 person-hours to install and set up one field network, and cited this as the biggest barrier.</li></ul>",
+      calcs: [], book: ["2.10"], tags: ["installation", "sensor contact", "slurry", "reliability"] },
+    { id: "results", h: "How growers used the data",
+      html: "<ul><li>2013 (very wet): 20 growers, about 11,304 irrigated corn acres. All applied more than 10 inches less irrigation than usual because of repeated rain. Sensors had virtually no effect on scheduling. Saturated soils cut corn yield 10 to 35% for many growers, and 16 reported similar or lower yields, blamed on excess rain and nitrogen loss.</li><li>2014 (mild, timely rain): 19 growers, 8,940 acres. 2 applied less water, 5 more, 5 the same, and 7 did not look at, did not trust, or could not reach the data. 6 checked daily, 2 every other day, 5 weekly, 6 never or had equipment problems. The web site was down 4 days over the July 4 weekend at a critical corn stage.</li><li>2015 (mild): 15 growers, 3,680 acres. 2 applied less, 3 more, 3 the same, 6 did not use the data. 3 reported yield increases but none credited the sensors.</li><li>Several growers said the sensors were most useful for deciding when to restart irrigation after a big rain.</li><li>12 growers said they would change practice, mostly toward more frequent, smaller irrigations.</li></ul>",
+      calcs: [], book: ["6.4"], tags: ["results", "corn", "grower adoption", "wet year"] },
+    { id: "economics", h: "Cost of monitoring versus cost of water",
+      html: "<ul><li>Equipment about $13.50 per acre plus about $9 per acre labor, based on a 5 year equipment life, a 50 acre field and $25 per hour labor.</li><li>Applying an extra inch of water cost about $3 to $6 per acre.</li><li>The report concludes that over irrigating by an inch or two costs less than the monitoring equipment for Delaware field crops, and that economic benefit could not be measured because no cooperator adopted the practice.</li></ul>",
+      calcs: ["eq-8.22"], book: ["8.7"], tags: ["economics", "pumping cost", "sensor cost"] },
+    { id: "conclusions", h: "Conclusions and where sensors may still fit",
+      html: "<ul><li>With the equipment available then, soil moisture monitoring was not a realistic tool for Mid-Atlantic field crop growers. Regular rain in a humid region covered for scheduling errors in all three years.</li><li>None of the 11 growers who said they would buy equipment had done so by spring 2016, mainly for lack of time to manage it. A private sensor service launched in 2015 also saw little uptake because of cost.</li><li>Sensors may fit better on high value specialty crops, including plastic mulched crops, and in dry or semi arid regions.</li><li>Needed next steps: a reliable low cost recording system, less labor to install and remove, simple ways to read data and trigger irrigation, and testing in a dry season and on poorly calibrated systems.</li></ul>",
+      calcs: [], book: ["2.10", "6.4"], tags: ["conclusions", "humid region", "specialty crops"] }
+  ],
+  tables: [
+    { id: "t1", title: "Sensor station design",
+      cols: ["Item", "Value"],
+      rows: [
+        ["Sensor", "Irrometer Watermark (matric potential)"],
+        ["Telemetry", "Watermark 950T transmitters to 950R receiver with cell modem"],
+        ["Stations per field", "4 (1 lightest soil, 1 heaviest soil, 2 main soil)"],
+        ["Sensors per station", "3"],
+        ["Depths", "6, 12 and 18 in"],
+        ["Transmissions", "about 10 to 15 per day"],
+        ["Season", "installed late May to early June, removed early September"],
+        ["Setup labor", "8 to 12 person-hours per field network"]
+      ],
+      notes: "SARE final report and 2013 and 2014 annual reports", calcs: [] },
+    { id: "t2", title: "Participation and how growers changed irrigation",
+      cols: ["Year", "Growers", "Irrigated corn acres", "Applied less", "Applied more", "Same", "Did not use data", "Reported yield increase"],
+      rows: [
+        ["2013", 20, 11304, "all (over 10 in less, due to rain)", 0, 0, "n/a", 1],
+        ["2014", 19, 8940, 2, 5, 5, 7, "2 (another section says all 19, 15 credited weather)"],
+        ["2015", 15, 3680, 2, 3, 3, 6, "3 (none credited sensors)"]
+      ],
+      notes: "Final report. 2013 acres also given as 11,340 in the milestones section.", calcs: [] },
+    { id: "t3", title: "Monitoring cost versus water cost",
+      cols: ["Item", "Value"],
+      rows: [
+        ["Equipment", "about $13.50 per acre"],
+        ["Labor", "about $9 per acre"],
+        ["Basis", "5 year life, 50 acre field, $25 per hour"],
+        ["Cost of 1 extra inch of irrigation", "$3 to $6 per acre"]
+      ],
+      notes: "Final report, economic analysis", calcs: ["eq-8.22"] }
+  ],
+  facts: [
+    { q: "What sensors did the Delaware SARE project use?", a: "Irrometer Watermark sensors with 950T wireless transmitters and a 950R cell modem receiver, about 10 to 15 readings per day.", tags: ["Watermark", "sensors"], calcs: [], book: ["2.10"] },
+    { q: "At what depths were soil moisture sensors installed in Delaware corn?", a: "6, 12 and 18 inches, three sensors per station (SARE LNE12-314).", tags: ["sensor depth", "corn"], calcs: [], book: ["2.10"] },
+    { q: "How many sensor stations per field, and where?", a: "Four: one in the lightest soil, one in the heaviest soil and two in the main soil type.", tags: ["sensor placement"], calcs: [], book: ["2.10"] },
+    { q: "How do you install a Watermark sensor in heavy soil?", a: "Bore an oversized hole and set the sensor in a slurry of the removed soil. In sands an undersized hole and press fit is enough.", tags: ["installation"], calcs: [], book: ["2.10"] },
+    { q: "How accurate are pivot calibration charts in Delaware?", a: "In NRCS and UD tests of over 400 pivots (about 25,000 acres), over 50% applied less than 80% of the chart amount.", tags: ["pivot calibration", "center pivot"], calcs: ["catch-can", "eq-13.7-inv"], book: ["5.4", "13.5"] },
+    { q: "What share of Delaware irrigation is center pivot?", a: "Over 85% of irrigated acres. A 2010 GIS layer counted 2,026 pivots on 113,000 acres.", tags: ["center pivot"], calcs: [], book: ["13.1"] },
+    { q: "How long does it take to set up a sensor network in a field?", a: "Growers estimated 8 to 12 person-hours per field, the biggest barrier they cited.", tags: ["labor"], calcs: [], book: [] },
+    { q: "What does soil moisture monitoring cost per acre?", a: "About $13.50 per acre for equipment plus $9 per acre labor (5 year life, 50 acre field, $25 per hour). An extra inch of irrigation cost $3 to $6 per acre.", tags: ["economics"], calcs: ["eq-8.22"], book: ["8.7"] },
+    { q: "Did sensors change irrigation on Delaware corn farms?", a: "Little. In 2014, 2 of 19 growers applied less, 5 more, 5 the same and 7 did not use the data. In 2015, 2 of 15 applied less.", tags: ["adoption", "results"], calcs: [], book: [] },
+    { q: "What happened to corn in the wet 2013 season?", a: "All 20 growers applied over 10 inches less irrigation, and saturated soils cut yields 10 to 35% for many.", tags: ["wet year", "corn"], calcs: [], book: [] },
+    { q: "When did growers find soil moisture data most useful?", a: "For deciding when to restart irrigation after a large rain.", tags: ["sensors", "scheduling"], calcs: ["ld-ed-window"], book: ["6.4"] },
+    { q: "Why did sensors not catch on for Delaware field crops?", a: "Cost and time to manage, reliability problems, and regular rain that hid scheduling errors. None of the 11 who planned to buy had done so by spring 2016.", tags: ["adoption"], calcs: [], book: [] },
+    { q: "Where might soil moisture sensors pay in Delaware?", a: "High value specialty crops including plastic mulched crops, and dry seasons or poorly calibrated systems (SARE LNE12-314 conclusions).", tags: ["specialty crops", "sensors"], calcs: [], book: ["14.7"] },
+    { q: "How did Kent County sensor data compare with Sussex?", a: "Kent County sites on heavier soils gave erratic data compared with sandier Sussex County sites.", tags: ["soils", "sensors"], calcs: [], book: ["2.10"] }
+  ]
+}]);

@@ -19,6 +19,8 @@ The book is licensed CC BY-NC-ND 4.0. Its text, figures and tables appear here u
 - On every calculator: what it is used for in the field, grower questions with worked answers, the related book figures, and the calculators that feed it and that it feeds
 - Study: over 2,000 multiple-choice questions from the book with spaced review, progress by chapter, figures and tables in the questions, and links back to the book and calculators
 - Notes on every unit in the converter: what it means, where it is used, and how the conversion factor is derived
+- Ask the guide: a chat that answers only from the book, the Delaware sources and the guide's notes, and offers choices when a question is unclear
+- Delaware: technical content from 11 documents (NRCS 449, NEH 652 and 623, Delaware soil series, DGS Bulletin 22, DEOS and DIMS, Brinson et al. 2024, SARE LNE12-314, UD irrigation studies, Mid-Atlantic vegetable recommendations, UD corn nitrogen). Federal text is copied as written, other sources are summarized with exact numbers and a link to the original. Delaware notes appear on the related calculators, book sections and workflow stages, every Delaware table has a row lookup, and search and chat include them
 - Works offline after the first visit
 
 ## Put it on GitHub Pages

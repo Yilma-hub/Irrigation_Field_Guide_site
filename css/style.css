@@ -466,3 +466,57 @@ details.cu[open] > summary::after { content: "Hide"; }
 .cbody .cf { background: var(--panel); padding: 8px 10px; border-radius: 6px; }
 .cbody .cf2 { color: var(--ink-2); font-size: 14px; }
 @media (max-width: 560px) { details.cu > summary { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } details.cu > summary::after { grid-column: 1 / 3; } }
+
+/* ---------- chat ---------- */
+.chat { max-width: 820px; display: flex; flex-direction: column; min-height: calc(100vh - var(--topH) - 60px); }
+.chat-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.chat-log { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 8px 0 16px; }
+.msg { max-width: 92%; padding: 10px 14px; border-radius: 14px; line-height: 1.5; font-size: 16px; }
+.msg p { margin: 4px 0; }
+.msg.you { align-self: flex-end; background: var(--water); color: var(--paper); border-bottom-right-radius: 4px; }
+.msg.guide { align-self: flex-start; background: var(--panel); border: 1px solid var(--rule); border-bottom-left-radius: 4px; max-width: 100%; }
+.msg h3 { margin: 2px 0 6px; font-size: 18px; }
+.cask { font-weight: 600; color: var(--loam); }
+.cblock { margin: 10px 0; }
+.ck { font: 700 13px var(--sans); color: var(--ink-2); margin-bottom: 3px; }
+.cblock.note { border-left: 4px solid var(--yellow); padding-left: 10px; }
+.cquote { font-family: var(--serif); font-size: 17px; line-height: 1.6; margin: 2px 0 4px; }
+.ctab { margin: 6px 0; overflow-x: auto; }
+.ctab-h { font-size: 13.5px; font-weight: 600; margin-bottom: 2px; }
+.ctab table.data { margin: 2px 0; font-size: 14px; }
+a.clk { display: block; padding: 7px 10px; border: 1px solid var(--rule); border-radius: 8px; margin-bottom: 6px; text-decoration: none; color: var(--ink); background: var(--paper); }
+a.clk b { display: block; color: var(--water); font: 700 15.5px var(--cond); }
+a.clk span { font-size: 14px; color: var(--ink-2); }
+.cvis { display: flex; gap: 8px; flex-wrap: wrap; }
+.cvis a { width: 150px; text-decoration: none; color: var(--ink); font-size: 13px; }
+.cvis img { width: 150px; height: 100px; object-fit: contain; background: #fff; border: 1px solid var(--rule); border-radius: 6px; display: block; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip.strong { border-color: var(--water); color: var(--water); text-decoration: none; }
+.cbig { font-size: 20px; }
+.chat-in { position: sticky; bottom: calc(var(--tabsH) + 8px); display: flex; gap: 8px; background: var(--paper); padding: 8px 0; }
+@media (min-width: 961px) { .chat-in { bottom: 0; } }
+.chat-in input { flex: 1; min-width: 0; height: 46px; border: 1.5px solid var(--rule); border-radius: 10px; padding: 0 12px; font: 500 16px var(--sans); background: var(--paper); color: var(--ink); }
+.chatfab { position: fixed; right: max(14px, env(safe-area-inset-right, 0px)); bottom: calc(var(--tabsH) + 14px + env(safe-area-inset-bottom, 0px)); z-index: 34; display: flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 999px; background: var(--yellow); color: var(--yellow-ink); text-decoration: none; font: 700 15px var(--cond); box-shadow: 0 4px 16px rgba(0,0,0,.22); }
+@media (min-width: 961px) { .chatfab { bottom: 18px; } }
+.chatfab[hidden] { display: none; }
+.wfbanner.chatb { background: var(--loam); color: var(--paper); }
+
+/* ---------- Delaware ---------- */
+.debadge { display: inline-block; font: 700 12px var(--sans); padding: 2px 8px; border-radius: 999px; margin-top: 4px; }
+.debadge.pd { background: var(--water-2); color: var(--water); }
+.debadge.sum { background: var(--loam-2); color: var(--loam); }
+.denotes { margin-top: 22px; }
+.denotes h2 { font-size: 20px; margin: 0 0 8px; }
+.deitem { border-left: 5px solid #2e7d5b; background: var(--panel); padding: 8px 12px; border-radius: 0 8px 8px 0; margin-bottom: 8px; }
+.deitem p { margin: 4px 0; font-size: 15px; }
+.desec { border-top: 1px solid var(--rule); margin-top: 18px; }
+.dehtml { font-size: 16.5px; line-height: 1.6; }
+.dehtml table { border-collapse: collapse; margin: 8px 0; font-size: 14.5px; }
+.dehtml th, .dehtml td { border-bottom: 1px solid var(--rule); padding: 4px 8px; text-align: left; }
+.detable { margin: 14px 0 20px; }
+.cblock.de { border-left: 4px solid #2e7d5b; padding-left: 10px; }
+.wfbanner.debanner { background: #2e7d5b; color: #fff; }
+p.pg, figcaption .pg, .deitem .pg, .hs .pg { white-space: normal; }
+figcaption .pg { display: block; margin-top: 4px; }
+.calc-note, .detable figcaption, .deitem p, .cblock p { overflow-wrap: anywhere; }
+.reader p.credit, .dehtml, .dehtml li, .dehtml p { overflow-wrap: anywhere; }

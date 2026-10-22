@@ -35,6 +35,31 @@
   // ---------- field use notes and connections ----------
   const USE = window.CALC_USE || {};
   const USE2 = window.CALC_USE2 || {};
+  const DE = window.DE_DOCS || [];
+  const DE_BY_CALC = {}, DE_BY_BOOK = {};
+  for (const d of DE) {
+    for (const sec of (d.sections || [])) {
+      for (const c of (sec.calcs || [])) (DE_BY_CALC[c] = DE_BY_CALC[c] || []).push({ d, sec });
+      for (const b of (sec.book || [])) (DE_BY_BOOK[b] = DE_BY_BOOK[b] || []).push({ d, sec });
+    }
+    for (const f of (d.facts || [])) {
+      for (const c of (f.calcs || [])) (DE_BY_CALC[c] = DE_BY_CALC[c] || []).push({ d, fact: f });
+      for (const b of (f.book || [])) (DE_BY_BOOK[b] = DE_BY_BOOK[b] || []).push({ d, fact: f });
+    }
+    for (const t of (d.tables || [])) for (const c of (t.calcs || [])) (DE_BY_CALC[c] = DE_BY_CALC[c] || []).push({ d, table: t });
+  }
+  const deBadge = d => `<span class="debadge ${d.license === "public domain" ? "pd" : "sum"}">${d.license === "public domain" ? "Federal, public domain" : "Summarized from source"}</span>`;
+  function renderDENotes(list, title) {
+    if (!list || !list.length) return "";
+    const seen = new Set();
+    const items = list.filter(x => { const k = x.d.id + (x.sec ? x.sec.id : x.fact ? x.fact.q : x.table.id); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 8);
+    return `<section class="denotes"><h2>${title}</h2>${items.map(x => {
+      if (x.fact) return `<div class="deitem"><b>${esc(x.fact.q)}</b><p>${esc(x.fact.a)}</p><a class="pg" href="#/de/${x.d.id}?a=facts">${esc(x.d.short)}</a></div>`;
+      if (x.table) return `<div class="deitem"><b>${esc(x.table.title)}</b><p><a href="#/de/${x.d.id}?a=dt-${x.table.id}">Open the table</a></p><a class="pg" href="#/de/${x.d.id}">${esc(x.d.short)}</a></div>`;
+      const txt = String(x.sec.html).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      return `<div class="deitem"><b>${esc(x.sec.h)}</b><p>${esc(txt.length > 320 ? txt.slice(0, 320).replace(/\s\S*$/, "") + "…" : txt)}</p><a class="pg" href="#/de/${x.d.id}?a=ds-${x.sec.id}">${esc(x.d.short)}, read more</a></div>`;
+    }).join("")}</section>`;
+  }
   const WF = window.WORKFLOW || { tracks: [] };
   const firstSentence = t => { const m = String(t || "").match(/^.*?[.!?](\s|$)/); return m ? m[0].trim() : String(t || ""); };
   // links in both directions: if A says it feeds B, B also lists A as a source
@@ -65,7 +90,7 @@
 
   // ---------- side contents ----------
   function buildSide() {
-    let h = `<div class="tools"><h2>Guide</h2><a href="#/" data-r="home">Home</a><a href="#/workflow" data-r="workflow">Workflow</a><a href="#/workflow/guide" data-r="workflow/guide">How it all connects</a><a href="#/study" data-r="study">Study: test yourself</a><a href="#/calc" data-r="calc">All calculators</a><a href="#/units" data-r="units">Unit converter</a><a href="#/tables" data-r="tables">Tables</a><a href="#/figures" data-r="figures">Figures</a><a href="#/glossary" data-r="glossary">Glossary</a><a href="#/notes" data-r="notes">My notes</a></div><h2>Book chapters</h2>`;
+    let h = `<div class="tools"><h2>Guide</h2><a href="#/" data-r="home">Home</a><a href="#/chat" data-r="chat">Ask the guide (chat)</a><a href="#/de" data-r="de">Delaware sources</a><a href="#/workflow" data-r="workflow">Workflow</a><a href="#/workflow/guide" data-r="workflow/guide">How it all connects</a><a href="#/study" data-r="study">Study: test yourself</a><a href="#/calc" data-r="calc">All calculators</a><a href="#/units" data-r="units">Unit converter</a><a href="#/tables" data-r="tables">Tables</a><a href="#/figures" data-r="figures">Figures</a><a href="#/glossary" data-r="glossary">Glossary</a><a href="#/notes" data-r="notes">My notes</a></div><h2>Book chapters</h2>`;
     for (const ch of B.chapters) {
       h += `<details data-ch="${ch.num}"><summary><span class="n">${ch.num}</span><span>${esc(ch.title)}</span></summary>`;
       for (const s of ch.sections) h += `<a href="#/s/${s.id}" data-r="s/${s.id}">${s.num ? `<span class="secnum">${s.num}</span>` : ""}${esc(s.title)}</a>`;
@@ -164,6 +189,8 @@
       <h1>Irrigation Systems Management, in the field</h1>
       <p class="sub">The full ASABE textbook with every table and figure, a calculator for every formula, and search that understands how farmers ask.</p>
       ${recent.length ? `<h2>Recently used</h2><div class="quick">${recent.map(id => `<a href="#/c/${id}"><b>${esc(CALC.byId[id].title)}</b><span>${CALC.byId[id].eq.length ? "Eq. " + CALC.byId[id].eq.join(", ") : "Lookup"}</span></a>`).join("")}</div>` : ""}
+      ${DE.length ? `<a class="wfbanner debanner" href="#/de"><b>Delaware sources</b><span>${DE.length} technical documents: NRCS standards, Delaware soils, aquifers, DEOS scheduling, UD irrigation research.</span></a>` : ""}
+      <a class="wfbanner chatb" href="#/chat"><b>Ask the guide</b><span>Type a question or keywords. Answers come from the book, its tables and the calculators.</span></a>
       ${window.QUIZ && QUIZ.length ? `<a class="wfbanner study" href="#/study"><b>Study: ${QUIZ.length.toLocaleString()} questions</b><span>${window.STUDY.counts().due ? window.STUDY.counts().due + " due for review today. " : ""}Test yourself on the book, chapter by chapter.</span></a>` : ""}
       <a class="wfbanner" href="#/workflow"><b>Start with the workflow</b><span>Soil, crop water use, scheduling, system checks and design, with every calculator in order and connected.</span></a>
       <div class="quick">${(window.WORKFLOW ? WORKFLOW.tracks : []).map(t => `<a href="#/workflow/${t.id}"><b>${esc(t.title)}</b><span>${esc(t.sub)}</span></a>`).join("")}</div>
@@ -219,6 +246,7 @@
       <h1>${s.num ? `<span class="secnum">${s.num}</span>` : ""}${esc(s.title)}</h1>
       <div class="pg" style="margin:-6px 0 14px">Starts on page ${s.page}</div>
       ${s.blocks.map((b, k) => renderBlock(b, k, s)).join("\n")}
+      ${renderDENotes(DE_BY_BOOK[s.id], "Delaware notes on this section")}
       ${noteBox("s:" + s.id, (s.num ? s.num + " " : "") + s.title)}
       <nav class="secnav">${prev ? `<a href="#/s/${prev.id}">‹ ${prev.num ? prev.num + " " : ""}${esc(prev.title)}</a>` : ""}${next ? `<a class="r" href="#/s/${next.id}">${next.num ? next.num + " " : ""}${esc(next.title)} ›</a>` : ""}</nav>
       <p class="credit">${CREDIT}</p></article>`;
@@ -268,9 +296,9 @@
     const figs = (c.figs || []).map(t => FIGLOC[t] ? `<a href="#/s/${FIGLOC[t].sec}?a=fig-${t}">Figure ${t}</a>` : "").join("");
     const secLink = SEC[c.sec] ? `<a href="#/s/${c.sec}${c.eq[0] && EQLOC[c.eq[0]] ? "?a=" + EQLOC[c.eq[0]].anchor : ""}">Read Section ${c.sec} ${esc(SEC[c.sec].title)} (p. ${c.page})</a>` : "";
     main.innerHTML = `<div class="calcwrap">
-      <div class="crumbs"><a href="#/calc">Calculators</a> › Chapter ${c.ch} ${esc((B.chapters[c.ch - 1] || {}).title || "")}</div>
+      <div class="crumbs"><a href="#/calc">Calculators</a> › ${c.ch ? `Chapter ${c.ch} ${esc((B.chapters[c.ch - 1] || {}).title || "")}` : `<a href="#/de/${esc(c.delaware || "")}">Delaware</a>`}</div>
       <div class="calc-head"><h1>${esc(c.title)}</h1>
-      <p>${c.eq.length ? (c.eq.length > 1 ? "Equations " : "Equation ") + c.eq.join(", ") + ", " : ""}page ${c.page}</p></div>
+      <p>${c.eq.length ? (c.eq.length > 1 ? "Equations " : "Equation ") + c.eq.join(", ") + ", " : ""}${c.page ? "page " + c.page : "Delaware source"}</p></div>
       ${eqImgs.length ? `<div class="formula">${eqImgs.map(x => `<img src="${x.img.src}" alt="Equation from the book" data-zoom="${x.img.src}" style="width:${eqImgW(x.img)}px">`).join("")}</div>` : ""}
       ${renderPlace(c)}
       ${renderUse(c)}
@@ -280,6 +308,7 @@
       <div class="readout" id="readout" aria-live="polite"></div>
       ${exs.length ? `<div class="exrow">Book examples: ${exs.map((e, k) => `<button class="linkbtn" data-ex="${k}">${esc(e.ref)}${e.label ? " (" + esc(e.label) + ")" : ""}</button>`).join("")}<button class="linkbtn" id="resetBtn">Reset</button></div>` : `<div class="exrow"><button class="linkbtn" id="resetBtn">Reset</button></div>`}
       ${renderQA(c)}
+      ${renderDENotes(DE_BY_CALC[c.id], "Delaware notes")}
       ${renderFigs(c)}
       ${renderLinks(c)}
       <div class="related">${secLink}${tbls}${figs}</div>
@@ -483,6 +512,7 @@
         <p>${esc(st.text)}</p>
         ${st.ch ? `<p class="pg">Book: ${st.ch.map(n => `<a href="#/s/${(B.chapters[n - 1] || { sections: [{ id: "" }] }).sections[0].id}">Chapter ${n}</a>`).join(", ")}</p>` : ""}
         <ol class="steps">${st.calcs.filter(id => CALC.byId[id]).map(id => { const c = CALC.byId[id], u = USE[id]; return `<li><a href="#/c/${id}"><b>${esc(c.title)}</b><small>${c.eq.length ? "Eq. " + esc(c.eq.join(", ")) : c.id.startsWith("tab-") ? "Table lookup" : "Procedure"}</small>${u ? `<span>${esc(firstSentence(u.use))}</span>` : ""}</a></li>`; }).join("")}</ol>
+        ${(() => { const L = []; const seen = new Set(); for (const id of st.calcs) for (const x of (DE_BY_CALC[id] || [])) { const k = x.d.id; if (!seen.has(k)) { seen.add(k); L.push(x.d); } } return L.length ? `<p class="pg">Delaware sources for this stage: ${L.map(d => `<a href="#/de/${d.id}">${esc(d.short)}</a>`).join(", ")}</p>` : ""; })()}
         ${i < t.stages.length - 1 ? `<p class="nextstage">Next: <a href="#/workflow/${t.id}?a=st-${t.stages[i + 1].id}">${esc(t.stages[i + 1].title)}</a></p>` : ""}
       </section>`).join("")}
       <nav class="secnav">${WF.tracks.map(x => x.id === t.id ? "" : `<a href="#/workflow/${x.id}">${esc(x.title)} ›</a>`).join("")}</nav></div>`;
@@ -524,6 +554,8 @@
         if (!list.length) continue;
         h += `<ul class="clist"><h2>${ch.num}. ${esc(ch.title)}</h2>${list.map(c => `<li><a href="#/c/${c.id}"><span class="eqn">${c.eq.length ? "Eq " + esc(c.eq[0]) : c.id.startsWith("tab-") ? "Table" : "Steps"}</span><span class="t">${esc(c.title)}<small>${c.eq.length > 1 ? "Equations " + esc(c.eq.join(", ")) + ", " : ""}${c.tables && c.tables.length ? "Table " + esc(c.tables.join(", ")) + ", " : ""}p. ${c.page}</small></span></a></li>`).join("")}</ul>`;
       }
+      const deList = (byCh[0] || []).filter(c => !f || (c.title + " " + c.tags.join(" ")).toLowerCase().includes(f));
+      if (deList.length) h += `<ul class="clist"><h2>Delaware tables</h2>${deList.map(c => `<li><a href="#/c/${c.id}"><span class="eqn">Table</span><span class="t">${esc(c.title)}<small>${esc(c.note.split(".")[0])}</small></span></a></li>`).join("")}</ul>`;
       $("#clist").innerHTML = h || `<p class="empty">No calculator matches “${esc(f)}”. Try the search bar at the top.</p>`;
     };
     $("#cfilter").addEventListener("input", draw); draw();
@@ -568,6 +600,32 @@
       <nav class="secnav">${k > 0 ? `<a href="#/${kind}/${all[k - 1]}">‹ ${word} ${all[k - 1]}</a>` : ""}${k < all.length - 1 ? `<a class="r" href="#/${kind}/${all[k + 1]}">${word} ${all[k + 1]} ›</a>` : ""}</nav>
       <p class="credit">${CREDIT}</p></div>`;
     window.scrollTo(0, 0);
+  }
+
+  function viewDE(id, anchor) {
+    if (!id) {
+      main.innerHTML = `<div class="reader"><h1>Delaware</h1>
+        <p class="wflead">Technical material from federal, state and University of Delaware sources, for irrigation on Delaware farms. Federal documents are copied as written. Other sources are summarized in our words with their numbers exact, and every page links to the original.</p>
+        ${DE.length ? DE.map(d => `<a class="hit" href="#/de/${d.id}"><div class="ht">${esc(d.title)}</div><div class="hs">${esc(d.org)}${d.year ? ", " + d.year : ""}. ${esc(d.summary)}</div>${deBadge(d)}</a>`).join("") : `<p class="empty">The Delaware documents have not loaded yet.</p>`}
+        <p class="credit">Sources belong to their authors. Summaries were written for this guide.</p></div>`;
+      window.scrollTo(0, 0); return;
+    }
+    const d = DE.find(x => x.id === id);
+    if (!d) return viewMissing();
+    const tbl = t => `<figure class="detable" id="dt-${esc(t.id)}"><figcaption><b>${esc(t.title)}</b>${t.notes ? ` <span class="pg">${esc(t.notes)}</span>` : ""}</figcaption><div class="scrollx"><table class="data"><thead><tr>${(t.cols || []).map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${(t.rows || []).map(r => `<tr>${(Array.isArray(r) ? r : Object.values(r)).map(v => `<td>${esc(v === null || v === undefined ? "–" : v)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${(t.calcs || []).filter(x => CALC.byId[x]).map(x => `<a class="calcbtn" href="#/c/${x}">${calcIcon}${esc(CALC.byId[x].title)}</a>`).join(" ")}${CALC.byId["de-" + d.id + "-" + t.id] ? ` <a class="calcbtn" href="#/c/de-${d.id}-${t.id}">${calcIcon}Look up a row</a>` : ""}</figure>`;
+    main.innerHTML = `<article class="reader">
+      <div class="crumbs"><a href="#/de">Delaware</a> › ${esc(d.org)}</div>
+      <h1>${esc(d.title)}</h1>
+      <p class="pg">${esc(d.org)}${d.year ? ", " + d.year : ""}. ${deBadge(d)} <a href="${esc(d.url)}" target="_blank" rel="noopener">Original document</a></p>
+      <p class="wflead">${esc(d.summary)}</p>
+      <nav class="stagejump">${(d.sections || []).map(x => `<a href="#/de/${d.id}?a=ds-${x.id}">${esc(x.h)}</a>`).join("")}${(d.facts || []).length ? `<a href="#/de/${d.id}?a=facts">Quick facts</a>` : ""}</nav>
+      ${(d.sections || []).map(x => `<section class="desec" id="ds-${esc(x.id)}"><h2>${esc(x.h)}</h2><div class="dehtml">${x.html}</div>
+        ${(x.calcs || []).filter(k => CALC.byId[k]).length || (x.book || []).filter(k => SEC[k]).length ? `<div class="btnrow">${(x.calcs || []).filter(k => CALC.byId[k]).map(k => `<a class="calcbtn" href="#/c/${k}">${calcIcon}${esc(CALC.byId[k].title)}</a>`).join("")}${(x.book || []).filter(k => SEC[k]).map(k => `<a class="linkbtn" href="#/s/${k}">Book ${k} ${esc(SEC[k].title)}</a>`).join("")}</div>` : ""}</section>`).join("")}
+      ${(d.tables || []).length ? `<h2>Tables</h2>${d.tables.map(tbl).join("")}` : ""}
+      ${(d.facts || []).length ? `<h2 id="facts">Quick facts</h2>${d.facts.map(f => `<details class="qai" open><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("")}` : ""}
+      ${noteBox("de:" + d.id, d.short)}
+      <p class="credit">Source: ${esc(d.org)}, ${esc(d.title)}${d.year ? " (" + d.year + ")" : ""}. ${d.license === "public domain" ? "U.S. government work, public domain." : "Summarized for this guide. Read the original for full context."} <a href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.url)}</a></p></article>`;
+    if (anchor) { const el = document.getElementById(anchor); if (el) { el.style.scrollMarginTop = "70px"; setTimeout(() => el.scrollIntoView({ block: "start" }), 30); } } else window.scrollTo(0, 0);
   }
 
   function viewGlossary(anchor) {
@@ -686,6 +744,7 @@
       ${answer}
       ${group("Calculators", r.calc, h => `<a class="hit" href="${h.route}"><div class="ht">${esc(h.title)}</div><div class="hs">${h.doc.calc.eq.length ? "Equation " + esc(h.doc.calc.eq.join(", ")) + ", " : ""}page ${h.doc.calc.page}</div></a>`)}
       ${group("In the book", r.text, plainHit)}
+      ${group("Delaware sources", r.defact.concat(r.de).slice(0, 6), h => `<a class="hit" href="${hitLink(h)}"><div class="ht">${esc(h.title)}</div><div class="hs">${h.doc.fact ? esc(h.doc.fact.a) : h.snippet} <span class="pg">${esc(h.doc.de.short)}</span></div></a>`)}
       ${group("Tables", r.table, h => `<a class="hit" href="#/t/${h.doc.num}"><div class="ht">${esc(h.title)}</div><div class="hs">${esc(plain(h.doc.tags))}</div></a>`)}
       ${group("Figures", r.figure, h => `<a class="hit" href="#/f/${h.doc.num}"><div class="ht">${esc(h.title)}</div><div class="hs">${esc(plain(h.doc.tags))}</div></a>`)}
       ${group("Worked examples", r.example, plainHit)}
@@ -709,6 +768,8 @@
     if (r === "s") { viewSection(parts.slice(1).join("/"), params.a); key = "s/" + parts.slice(1).join("/"); }
     else if (r === "c") { viewCalc(parts.slice(1).join("/"), params); key = "c/" + parts[1]; }
     else if (r === "calc") viewCalcList(params.f);
+    else if (r === "de") { viewDE(parts[1], params.a); key = "de"; }
+    else if (r === "chat") { window.CHAT.view(main, { B, CALC, SEC, FIGLOC, TABLOC, imgTag }, params); key = "chat"; }
     else if (r === "study") { window.STUDY.view(main, parts, params, { B, CALC, SEC, FIGLOC, TABLOC, imgTag }); key = "study"; }
     else if (r === "workflow") { viewWorkflow(parts[1], params.a); key = parts[1] === "guide" ? "workflow/guide" : "workflow"; }
     else if (r === "book") viewBook();
@@ -723,6 +784,8 @@
     else if (r === "home") viewHome();
     else viewMissing();
     markSide(key);
+    const fab = document.getElementById("chatFab");
+    if (fab) fab.hidden = key === "chat";
     if (r !== "search" && document.activeElement !== qInput) main.focus({ preventScroll: true });
     document.title = (main.querySelector("h1") ? main.querySelector("h1").textContent + " | " : "") + "Irrigation Field Guide";
   }
