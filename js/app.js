@@ -32,6 +32,23 @@
   const calcsForFig = n => CALC.CALCS.filter(c => (c.figs || []).includes(n));
   const calcsForEx = lab => CALC.CALCS.filter(c => (c.examples || []).some(e => new RegExp("\\b" + lab.replace(".", "\\.") + "\\b").test(e.ref)));
 
+  // ---------- field use notes and connections ----------
+  const USE = window.CALC_USE || {};
+  const WF = window.WORKFLOW || { tracks: [] };
+  const firstSentence = t => { const m = String(t || "").match(/^.*?[.!?](\s|$)/); return m ? m[0].trim() : String(t || ""); };
+  // links in both directions: if A says it feeds B, B also lists A as a source
+  const LINKS = {};
+  const linkOf = id => (LINKS[id] = LINKS[id] || { from: new Map(), to: new Map() });
+  for (const [id, u] of Object.entries(USE)) {
+    if (!CALC.byId[id]) continue;
+    for (const [o, why] of (u.from || [])) if (CALC.byId[o] && o !== id) { if (!linkOf(id).from.has(o)) linkOf(id).from.set(o, why); if (!linkOf(o).to.has(id)) linkOf(o).to.set(id, why); }
+    for (const [o, why] of (u.to || [])) if (CALC.byId[o] && o !== id) { if (!linkOf(id).to.has(o)) linkOf(id).to.set(o, why); if (!linkOf(o).from.has(id)) linkOf(o).from.set(id, why); }
+  }
+  // where each calculator sits in the workflow
+  const PLACES = {};
+  for (const t of WF.tracks) for (const st of t.stages) st.calcs.forEach((id, k) => (PLACES[id] = PLACES[id] || []).push({ t, st, k }));
+  for (const c of CALC.CALCS) { const u = USE[c.id]; if (u) { c.tags = c.tags.concat([u.ask || ""]); c.note2 = u.use; } }
+
   window.SEARCH.build();
 
   const CREDIT = `Book text, figures and tables: Eisenhauer, D. E., Martin, D. L., Heeren, D. M., &amp; Hoffman, G. J. (2021). <i>Irrigation Systems Management</i>. ASABE. <a href="https://doi.org/10.13031/ISM.2021">doi:10.13031/ISM.2021</a>. Licensed <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/">CC BY-NC-ND 4.0</a>, reproduced unchanged for non-commercial use. Calculators, search and field notes were added for this guide and are not part of the book. Free PDF from <a href="https://asabe.org/ISM">asabe.org/ISM</a>.`;
@@ -47,7 +64,7 @@
 
   // ---------- side contents ----------
   function buildSide() {
-    let h = `<div class="tools"><h2>Guide</h2><a href="#/" data-r="home">Home</a><a href="#/calc" data-r="calc">All calculators</a><a href="#/units" data-r="units">Unit converter</a><a href="#/tables" data-r="tables">Tables</a><a href="#/figures" data-r="figures">Figures</a><a href="#/glossary" data-r="glossary">Glossary</a><a href="#/notes" data-r="notes">My notes</a></div><h2>Book chapters</h2>`;
+    let h = `<div class="tools"><h2>Guide</h2><a href="#/" data-r="home">Home</a><a href="#/workflow" data-r="workflow">Workflow</a><a href="#/workflow/guide" data-r="workflow/guide">How it all connects</a><a href="#/calc" data-r="calc">All calculators</a><a href="#/units" data-r="units">Unit converter</a><a href="#/tables" data-r="tables">Tables</a><a href="#/figures" data-r="figures">Figures</a><a href="#/glossary" data-r="glossary">Glossary</a><a href="#/notes" data-r="notes">My notes</a></div><h2>Book chapters</h2>`;
     for (const ch of B.chapters) {
       h += `<details data-ch="${ch.num}"><summary><span class="n">${ch.num}</span><span>${esc(ch.title)}</span></summary>`;
       for (const s of ch.sections) h += `<a href="#/s/${s.id}" data-r="s/${s.id}">${s.num ? `<span class="secnum">${s.num}</span>` : ""}${esc(s.title)}</a>`;
@@ -66,7 +83,7 @@
     side.querySelectorAll("a.on").forEach(a => a.classList.remove("on"));
     const a = side.querySelector(`a[data-r="${CSS.escape(r)}"]`);
     if (a) { a.classList.add("on"); const d = a.closest("details"); if (d) d.open = true; }
-    document.querySelectorAll(".tabs a").forEach(t => t.classList.toggle("on", r === t.dataset.tab || (t.dataset.tab === "book" && (r.startsWith("s/") || r === "book")) || (t.dataset.tab === "calc" && r.startsWith("c/"))));
+    document.querySelectorAll(".tabs a").forEach(t => t.classList.toggle("on", r === t.dataset.tab || (t.dataset.tab === "book" && (r.startsWith("s/") || r === "book")) || (t.dataset.tab === "calc" && r.startsWith("c/")) || (t.dataset.tab === "workflow" && r.startsWith("workflow"))));
   }
 
   // ---------- search box ----------
@@ -146,6 +163,8 @@
       <h1>Irrigation Systems Management, in the field</h1>
       <p class="sub">The full ASABE textbook with every table and figure, a calculator for every formula, and search that understands how farmers ask.</p>
       ${recent.length ? `<h2>Recently used</h2><div class="quick">${recent.map(id => `<a href="#/c/${id}"><b>${esc(CALC.byId[id].title)}</b><span>${CALC.byId[id].eq.length ? "Eq. " + CALC.byId[id].eq.join(", ") : "Lookup"}</span></a>`).join("")}</div>` : ""}
+      <a class="wfbanner" href="#/workflow"><b>Start with the workflow</b><span>Soil, crop water use, scheduling, system checks and design, with every calculator in order and connected.</span></a>
+      <div class="quick">${(window.WORKFLOW ? WORKFLOW.tracks : []).map(t => `<a href="#/workflow/${t.id}"><b>${esc(t.title)}</b><span>${esc(t.sub)}</span></a>`).join("")}</div>
       <h2>Quick calculators</h2><div class="quick">${picks}</div>
       <h2>Chapters</h2>
       <div class="chapters">${B.chapters.map(ch => `<a href="#/s/${ch.sections[0].id}"><span class="n">${ch.num}</span><span>${esc(ch.title)}</span></a>`).join("")}</div>
@@ -251,11 +270,14 @@
       <div class="calc-head"><h1>${esc(c.title)}</h1>
       <p>${c.eq.length ? (c.eq.length > 1 ? "Equations " : "Equation ") + c.eq.join(", ") + ", " : ""}page ${c.page}</p></div>
       ${eqImgs.length ? `<div class="formula">${eqImgs.map(x => `<img src="${x.img.src}" alt="Equation from the book" data-zoom="${x.img.src}" style="width:${eqImgW(x.img)}px">`).join("")}</div>` : ""}
+      ${renderPlace(c)}
+      ${renderUse(c)}
       ${c.note ? `<p class="calc-note">${c.note}</p>` : ""}
       ${canSolve ? `<div class="solvebar" id="solvebar"></div>` : ""}
       <div class="fields" id="fields"></div>
       <div class="readout" id="readout" aria-live="polite"></div>
       ${exs.length ? `<div class="exrow">Book examples: ${exs.map((e, k) => `<button class="linkbtn" data-ex="${k}">${esc(e.ref)}${e.label ? " (" + esc(e.label) + ")" : ""}</button>`).join("")}<button class="linkbtn" id="resetBtn">Reset</button></div>` : `<div class="exrow"><button class="linkbtn" id="resetBtn">Reset</button></div>`}
+      ${renderLinks(c)}
       <div class="related">${secLink}${tbls}${figs}</div>
       ${renderCalcTables(c)}
       ${noteBox("c:" + c.id, c.title)}
@@ -381,6 +403,71 @@
       if (ex) { loadExample(exs[+ex.dataset.ex]); for (const o of c.outputs) st.ou[o.k] = o.u; redraw(); return; }
       if (e.target.id === "resetBtn") { for (const inp of c.inputs) { st.u[inp.k] = inp.u; st.v[inp.k] = inp.v; } for (const o of c.outputs) st.ou[o.k] = o.u; st.solve = null; redraw(); }
     });
+    window.scrollTo(0, 0);
+  }
+
+  function renderPlace(c) {
+    const ps = PLACES[c.id] || [];
+    if (!ps.length) return "";
+    return `<div class="wfplace">${ps.map(({ t, st, k }) => {
+      const prev = st.calcs[k - 1], next = st.calcs[k + 1];
+      return `<div class="wfp"><a href="#/workflow/${t.id}?a=st-${st.id}">${esc(t.title)} › ${esc(st.title)}</a> <span class="pg">step ${k + 1} of ${st.calcs.length}</span>
+        <span class="wfnav">${prev && CALC.byId[prev] ? `<a href="#/c/${prev}" title="${esc(CALC.byId[prev].title)}">‹ Previous</a>` : ""}${next && CALC.byId[next] ? `<a href="#/c/${next}" title="${esc(CALC.byId[next].title)}">Next: ${esc(CALC.byId[next].title)} ›</a>` : ""}</span></div>`;
+    }).join("")}</div>`;
+  }
+  function renderUse(c) {
+    const u = USE[c.id];
+    if (!u) return "";
+    return `<div class="fielduse"><h2>Used in the field</h2><p>${esc(u.use)}</p>${u.ask ? `<p class="ask">A grower might ask: “${esc(u.ask)}”</p>` : ""}</div>`;
+  }
+  function renderLinks(c) {
+    const L = LINKS[c.id];
+    if (!L || (!L.from.size && !L.to.size)) return "";
+    const col = (title, m) => `<div class="lcol"><h3>${title}</h3>${m.size ? [...m].map(([id, why]) => `<a class="lk" href="#/c/${id}"><b>${esc(CALC.byId[id].title)}</b><span>${esc(why)}</span></a>`).join("") : `<p class="empty">Measured or looked up directly.</p>`}</div>`;
+    return `<section class="links"><h2>Connected calculators</h2><div class="lcols">${col("Inputs come from", L.from)}${col("Results go to", L.to)}</div></section>`;
+  }
+
+  // ---------- workflow ----------
+  function wfText(t) {
+    return String(t).replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, (m, id, label) => {
+      if (id.startsWith("s:")) return `<a href="#/s/${id.slice(2)}">${label}</a>`;
+      if (id.startsWith("stage:")) { const [tr, sg] = id.slice(6).split("/"); return `<a href="#/workflow/${tr}?a=st-${sg}">${label}</a>`; }
+      return CALC.byId[id] ? `<a href="#/c/${id}">${label}</a>` : label;
+    });
+  }
+  function viewWorkflow(trackId, anchor) {
+    if (trackId === "guide") return viewWorkflowGuide();
+    const chain = ["Soil", "Crop water use", "Scheduling", "Apply and measure", "System check", "Pump and supply", "Design"];
+    if (!trackId) {
+      main.innerHTML = `<div class="wf"><h1>Workflow</h1>
+        <p class="wflead">${esc(WF.intro)}</p>
+        <ol class="chain" aria-label="The chain from soil to design">${chain.map(x => `<li>${esc(x)}</li>`).join("")}</ol>
+        <div class="tracks">${WF.tracks.map(t => `<a class="track" href="#/workflow/${t.id}"><b>${esc(t.title)}</b><span class="tsub">${esc(t.sub)}</span><span>${esc(t.who)}</span><ol>${t.stages.map(st => `<li>${esc(st.title)}</li>`).join("")}</ol></a>`).join("")}</div>
+        <p><a class="calcbtn" href="#/workflow/guide">Read how it all connects, with one field worked through</a></p>
+        <p class="credit">The workflow, field-use notes and connections were written for this guide and are not part of the book.</p></div>`;
+      window.scrollTo(0, 0); return;
+    }
+    const t = WF.tracks.find(x => x.id === trackId);
+    if (!t) return viewMissing();
+    main.innerHTML = `<div class="wf"><div class="crumbs"><a href="#/workflow">Workflow</a> › ${esc(t.title)}</div><h1>${esc(t.title)}</h1>
+      <p class="wflead">${esc(t.who)}</p>
+      <nav class="stagejump">${t.stages.map((st, i) => `<a href="#/workflow/${t.id}?a=st-${st.id}">${i + 1}. ${esc(st.title)}</a>`).join("")}</nav>
+      ${t.stages.map((st, i) => `<section class="stage" id="st-${st.id}">
+        <h2><span class="secnum">${i + 1}</span>${esc(st.title)}</h2>
+        <p class="q">${esc(st.q)}</p>
+        <p>${esc(st.text)}</p>
+        ${st.ch ? `<p class="pg">Book: ${st.ch.map(n => `<a href="#/s/${(B.chapters[n - 1] || { sections: [{ id: "" }] }).sections[0].id}">Chapter ${n}</a>`).join(", ")}</p>` : ""}
+        <ol class="steps">${st.calcs.filter(id => CALC.byId[id]).map(id => { const c = CALC.byId[id], u = USE[id]; return `<li><a href="#/c/${id}"><b>${esc(c.title)}</b><small>${c.eq.length ? "Eq. " + esc(c.eq.join(", ")) : c.id.startsWith("tab-") ? "Table lookup" : "Procedure"}</small>${u ? `<span>${esc(firstSentence(u.use))}</span>` : ""}</a></li>`; }).join("")}</ol>
+        ${i < t.stages.length - 1 ? `<p class="nextstage">Next: <a href="#/workflow/${t.id}?a=st-${t.stages[i + 1].id}">${esc(t.stages[i + 1].title)}</a></p>` : ""}
+      </section>`).join("")}
+      <nav class="secnav">${WF.tracks.map(x => x.id === t.id ? "" : `<a href="#/workflow/${x.id}">${esc(x.title)} ›</a>`).join("")}</nav></div>`;
+    if (anchor) { const el = document.getElementById(anchor); if (el) { el.style.scrollMarginTop = "70px"; setTimeout(() => el.scrollIntoView({ block: "start" }), 30); } } else window.scrollTo(0, 0);
+  }
+  function viewWorkflowGuide() {
+    const G2 = window.WORKFLOW_GUIDE || [];
+    main.innerHTML = `<article class="reader"><div class="crumbs"><a href="#/workflow">Workflow</a> › How it all connects</div><h1>How it all connects</h1>
+      ${G2.map(sec => `<h2>${esc(sec.h)}</h2>${sec.p.map(p => `<p class="bk">${wfText(esc(p))}</p>`).join("")}`).join("")}
+      <p class="credit">Written for this guide; not part of the book. The book's own text is in the chapters.</p></article>`;
     window.scrollTo(0, 0);
   }
 
@@ -575,6 +662,7 @@
     if (r === "s") { viewSection(parts.slice(1).join("/"), params.a); key = "s/" + parts.slice(1).join("/"); }
     else if (r === "c") { viewCalc(parts.slice(1).join("/"), params); key = "c/" + parts[1]; }
     else if (r === "calc") viewCalcList(params.f);
+    else if (r === "workflow") { viewWorkflow(parts[1], params.a); key = parts[1] === "guide" ? "workflow/guide" : "workflow"; }
     else if (r === "book") viewBook();
     else if (r === "tables") viewGallery("tables");
     else if (r === "figures") viewGallery("figures");
