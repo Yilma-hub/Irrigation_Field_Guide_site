@@ -29,11 +29,12 @@
   window.secById = id => SEC[id];
   const calcsForEq = n => CALC.CALCS.filter(c => c.eq.includes(n));
   const calcsForTable = n => CALC.CALCS.filter(c => (c.tables || []).includes(n));
-  const calcsForFig = n => CALC.CALCS.filter(c => (c.figs || []).includes(n));
+  const calcsForFig = n => CALC.CALCS.filter(c => (c.figs || []).includes(n) || (((window.CALC_USE2 || {})[c.id] || {}).figs || []).includes(n));
   const calcsForEx = lab => CALC.CALCS.filter(c => (c.examples || []).some(e => new RegExp("\\b" + lab.replace(".", "\\.") + "\\b").test(e.ref)));
 
   // ---------- field use notes and connections ----------
   const USE = window.CALC_USE || {};
+  const USE2 = window.CALC_USE2 || {};
   const WF = window.WORKFLOW || { tracks: [] };
   const firstSentence = t => { const m = String(t || "").match(/^.*?[.!?](\s|$)/); return m ? m[0].trim() : String(t || ""); };
   // links in both directions: if A says it feeds B, B also lists A as a source
@@ -47,7 +48,7 @@
   // where each calculator sits in the workflow
   const PLACES = {};
   for (const t of WF.tracks) for (const st of t.stages) st.calcs.forEach((id, k) => (PLACES[id] = PLACES[id] || []).push({ t, st, k }));
-  for (const c of CALC.CALCS) { const u = USE[c.id]; if (u) { c.tags = c.tags.concat([u.ask || ""]); c.note2 = u.use; } }
+  for (const c of CALC.CALCS) { const u = USE[c.id], u2 = USE2[c.id]; if (u) c.tags = c.tags.concat([u.ask || ""]); if (u2 && u2.qa) c.tags = c.tags.concat(u2.qa.map(x => x.q)); }
 
   window.SEARCH.build();
 
@@ -64,7 +65,7 @@
 
   // ---------- side contents ----------
   function buildSide() {
-    let h = `<div class="tools"><h2>Guide</h2><a href="#/" data-r="home">Home</a><a href="#/workflow" data-r="workflow">Workflow</a><a href="#/workflow/guide" data-r="workflow/guide">How it all connects</a><a href="#/calc" data-r="calc">All calculators</a><a href="#/units" data-r="units">Unit converter</a><a href="#/tables" data-r="tables">Tables</a><a href="#/figures" data-r="figures">Figures</a><a href="#/glossary" data-r="glossary">Glossary</a><a href="#/notes" data-r="notes">My notes</a></div><h2>Book chapters</h2>`;
+    let h = `<div class="tools"><h2>Guide</h2><a href="#/" data-r="home">Home</a><a href="#/workflow" data-r="workflow">Workflow</a><a href="#/workflow/guide" data-r="workflow/guide">How it all connects</a><a href="#/study" data-r="study">Study: test yourself</a><a href="#/calc" data-r="calc">All calculators</a><a href="#/units" data-r="units">Unit converter</a><a href="#/tables" data-r="tables">Tables</a><a href="#/figures" data-r="figures">Figures</a><a href="#/glossary" data-r="glossary">Glossary</a><a href="#/notes" data-r="notes">My notes</a></div><h2>Book chapters</h2>`;
     for (const ch of B.chapters) {
       h += `<details data-ch="${ch.num}"><summary><span class="n">${ch.num}</span><span>${esc(ch.title)}</span></summary>`;
       for (const s of ch.sections) h += `<a href="#/s/${s.id}" data-r="s/${s.id}">${s.num ? `<span class="secnum">${s.num}</span>` : ""}${esc(s.title)}</a>`;
@@ -83,7 +84,7 @@
     side.querySelectorAll("a.on").forEach(a => a.classList.remove("on"));
     const a = side.querySelector(`a[data-r="${CSS.escape(r)}"]`);
     if (a) { a.classList.add("on"); const d = a.closest("details"); if (d) d.open = true; }
-    document.querySelectorAll(".tabs a").forEach(t => t.classList.toggle("on", r === t.dataset.tab || (t.dataset.tab === "book" && (r.startsWith("s/") || r === "book")) || (t.dataset.tab === "calc" && r.startsWith("c/")) || (t.dataset.tab === "workflow" && r.startsWith("workflow"))));
+    document.querySelectorAll(".tabs a").forEach(t => t.classList.toggle("on", r === t.dataset.tab || (t.dataset.tab === "book" && (r.startsWith("s/") || r === "book")) || (t.dataset.tab === "calc" && r.startsWith("c/")) || (t.dataset.tab === "workflow" && r.startsWith("workflow")) || (t.dataset.tab === "study" && r.startsWith("study"))));
   }
 
   // ---------- search box ----------
@@ -163,6 +164,7 @@
       <h1>Irrigation Systems Management, in the field</h1>
       <p class="sub">The full ASABE textbook with every table and figure, a calculator for every formula, and search that understands how farmers ask.</p>
       ${recent.length ? `<h2>Recently used</h2><div class="quick">${recent.map(id => `<a href="#/c/${id}"><b>${esc(CALC.byId[id].title)}</b><span>${CALC.byId[id].eq.length ? "Eq. " + CALC.byId[id].eq.join(", ") : "Lookup"}</span></a>`).join("")}</div>` : ""}
+      ${window.QUIZ && QUIZ.length ? `<a class="wfbanner study" href="#/study"><b>Study: ${QUIZ.length.toLocaleString()} questions</b><span>${window.STUDY.counts().due ? window.STUDY.counts().due + " due for review today. " : ""}Test yourself on the book, chapter by chapter.</span></a>` : ""}
       <a class="wfbanner" href="#/workflow"><b>Start with the workflow</b><span>Soil, crop water use, scheduling, system checks and design, with every calculator in order and connected.</span></a>
       <div class="quick">${(window.WORKFLOW ? WORKFLOW.tracks : []).map(t => `<a href="#/workflow/${t.id}"><b>${esc(t.title)}</b><span>${esc(t.sub)}</span></a>`).join("")}</div>
       <h2>Quick calculators</h2><div class="quick">${picks}</div>
@@ -277,6 +279,8 @@
       <div class="fields" id="fields"></div>
       <div class="readout" id="readout" aria-live="polite"></div>
       ${exs.length ? `<div class="exrow">Book examples: ${exs.map((e, k) => `<button class="linkbtn" data-ex="${k}">${esc(e.ref)}${e.label ? " (" + esc(e.label) + ")" : ""}</button>`).join("")}<button class="linkbtn" id="resetBtn">Reset</button></div>` : `<div class="exrow"><button class="linkbtn" id="resetBtn">Reset</button></div>`}
+      ${renderQA(c)}
+      ${renderFigs(c)}
       ${renderLinks(c)}
       <div class="related">${secLink}${tbls}${figs}</div>
       ${renderCalcTables(c)}
@@ -418,7 +422,24 @@
   function renderUse(c) {
     const u = USE[c.id];
     if (!u) return "";
-    return `<div class="fielduse"><h2>Used in the field</h2><p>${esc(u.use)}</p>${u.ask ? `<p class="ask">A grower might ask: “${esc(u.ask)}”</p>` : ""}</div>`;
+    const u2 = USE2[c.id] || {};
+    const more = (u2.more || []).map(p => `<p>${esc(p)}</p>`).join("");
+    return `<div class="fielduse"><h2>Used in the field</h2><p>${esc(u.use)}</p>${more}${u.ask && !(u2.qa && u2.qa.length) ? `<p class="ask">A grower might ask: “${esc(u.ask)}”</p>` : ""}</div>`;
+  }
+  function renderQA(c) {
+    const u2 = USE2[c.id] || {}, u = USE[c.id] || {};
+    const qa = (u2.qa || []).slice();
+    if (!qa.length) return "";
+    return `<section class="qa"><h2>Grower questions this answers</h2>${qa.map(x => `<details class="qai" open><summary>${esc(x.q)}</summary><p>${esc(x.a)}</p></details>`).join("")}</section>`;
+  }
+  function relatedFigs(c) {
+    const u2 = USE2[c.id] || {};
+    return [...new Set([...(c.figs || []), ...(u2.figs || [])])].filter(n => FIGLOC[n]);
+  }
+  function renderFigs(c) {
+    const fs = relatedFigs(c);
+    if (!fs.length) return "";
+    return `<section class="cfigs"><h2>${fs.length > 1 ? "Figures" : "Figure"} from the book</h2>${fs.map(n => { const f = FIGLOC[n]; return `<figure class="fig">${imgTag(f.b.img, "Figure " + n)}<figcaption>${f.b.caption} ${pageLink(f.page)} <a class="pg" href="#/f/${n}">All mentions</a></figcaption></figure>`; }).join("")}</section>`;
   }
   function renderLinks(c) {
     const L = LINKS[c.id];
@@ -435,6 +456,7 @@
       return CALC.byId[id] ? `<a href="#/c/${id}">${label}</a>` : label;
     });
   }
+  let flowCleanup = null;
   function viewWorkflow(trackId, anchor) {
     if (trackId === "guide") return viewWorkflowGuide();
     const chain = ["Soil", "Crop water use", "Scheduling", "Apply and measure", "System check", "Pump and supply", "Design"];
@@ -451,6 +473,9 @@
     if (!t) return viewMissing();
     main.innerHTML = `<div class="wf"><div class="crumbs"><a href="#/workflow">Workflow</a> › ${esc(t.title)}</div><h1>${esc(t.title)}</h1>
       <p class="wflead">${esc(t.who)}</p>
+      <div class="wftabs" role="tablist"><a href="#/workflow/${t.id}" class="on">Flow diagram</a><a href="#/workflow/${t.id}?a=list">Step by step list</a></div>
+      <section class="flowwrap" aria-label="Flow diagram for ${esc(t.title)}">${window.FLOW.html(t, CALC)}</section>
+      <h2 id="list">Step by step list</h2>
       <nav class="stagejump">${t.stages.map((st, i) => `<a href="#/workflow/${t.id}?a=st-${st.id}">${i + 1}. ${esc(st.title)}</a>`).join("")}</nav>
       ${t.stages.map((st, i) => `<section class="stage" id="st-${st.id}">
         <h2><span class="secnum">${i + 1}</span>${esc(st.title)}</h2>
@@ -461,6 +486,9 @@
         ${i < t.stages.length - 1 ? `<p class="nextstage">Next: <a href="#/workflow/${t.id}?a=st-${t.stages[i + 1].id}">${esc(t.stages[i + 1].title)}</a></p>` : ""}
       </section>`).join("")}
       <nav class="secnav">${WF.tracks.map(x => x.id === t.id ? "" : `<a href="#/workflow/${x.id}">${esc(x.title)} ›</a>`).join("")}</nav></div>`;
+    main.querySelector(".wf").classList.add("wide");
+    if (flowCleanup) flowCleanup();
+    flowCleanup = window.FLOW.attach(main.querySelector(".flowwrap"), t, CALC, LINKS, USE);
     if (anchor) { const el = document.getElementById(anchor); if (el) { el.style.scrollMarginTop = "70px"; setTimeout(() => el.scrollIntoView({ block: "start" }), 30); } } else window.scrollTo(0, 0);
   }
   function viewWorkflowGuide() {
@@ -662,6 +690,7 @@
     if (r === "s") { viewSection(parts.slice(1).join("/"), params.a); key = "s/" + parts.slice(1).join("/"); }
     else if (r === "c") { viewCalc(parts.slice(1).join("/"), params); key = "c/" + parts[1]; }
     else if (r === "calc") viewCalcList(params.f);
+    else if (r === "study") { window.STUDY.view(main, parts, params, { B, CALC, SEC, FIGLOC, TABLOC, imgTag }); key = "study"; }
     else if (r === "workflow") { viewWorkflow(parts[1], params.a); key = parts[1] === "guide" ? "workflow/guide" : "workflow"; }
     else if (r === "book") viewBook();
     else if (r === "tables") viewGallery("tables");

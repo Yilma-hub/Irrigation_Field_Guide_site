@@ -378,7 +378,7 @@
       { k: "dp", sym: "d<sub>p</sub>", label: "Deep percolation", dim: "length", u: "in", v: 0.02 },
       { k: "dr", sym: "d<sub>r</sub>", label: "Runoff", dim: "length", u: "in", v: 0 },
       { k: "Pe", sym: "P<sub>e</sub>", label: "Effective precipitation", dim: "length", u: "in", v: 0 },
-      { k: "dS", sym: "ΔS", label: "Change in root zone soil water (+ gain)", dim: "length", u: "in", v: 0, min: -1e6 }],
+      { k: "dS", sym: "ΔS", label: "Soil water drawn from storage during the period (enter as a positive number; negative if storage is refilled)", dim: "length", u: "in", v: 0, min: -1e6 }],
     outputs: [{ k: "dg", sym: "d<sub>g</sub>", label: "Gross irrigation requirement", dim: "length", u: "in", dp: 3 }],
     f: v => ({ dg: v.ET + v.dp + v.dr - v.Pe - v.dS }),
   });

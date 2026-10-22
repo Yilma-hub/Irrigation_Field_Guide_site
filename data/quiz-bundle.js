@@ -1,0 +1,1 @@
+window.QUIZ = window.QUIZ || [];
