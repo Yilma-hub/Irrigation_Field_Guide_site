@@ -520,3 +520,13 @@ p.pg, figcaption .pg, .deitem .pg, .hs .pg { white-space: normal; }
 figcaption .pg { display: block; margin-top: 4px; }
 .calc-note, .detable figcaption, .deitem p, .cblock p { overflow-wrap: anywhere; }
 .reader p.credit, .dehtml, .dehtml li, .dehtml p { overflow-wrap: anywhere; }
+/* study chapter rows: checkbox plus a tappable link */
+.sch { grid-template-columns: 34px minmax(0, 1fr); padding: 0; gap: 0; cursor: default; }
+.sch .sck { display: flex; align-items: center; justify-content: center; align-self: stretch; border-right: 1px solid var(--rule); cursor: pointer; }
+.sch .sgo { display: grid; grid-template-columns: 30px minmax(0, 1fr) 120px auto; gap: 8px; align-items: center; padding: 8px 10px; color: var(--ink); text-decoration: none; }
+.sch .sgo:hover { background: var(--water-2); }
+.sch .sopen { font: 600 13px var(--sans); color: var(--water); white-space: nowrap; }
+@media (max-width: 560px) { .sch { grid-template-columns: 34px minmax(0, 1fr); } .sch .sgo { grid-template-columns: 26px minmax(0, 1fr) auto; } .sch .bar { grid-column: 2 / 4; grid-row: 2; } }
+.smode .scount { display: block; margin-top: 6px; font: 600 12.5px var(--sans); font-style: normal; color: var(--water); }
+.smode[data-mode="review"] .scount { color: var(--yellow-ink); }
+.sticked { font-size: 14px; color: var(--ink-2); }

@@ -20,8 +20,7 @@
 
   function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-  function pick(mode, chs, n) {
-    const now = Date.now();
+  function poolFor(mode, chs) {
     let pool = Q().filter(q => !chs.length || chs.includes(q.ch));
     if (mode === "hard") pool = pool.filter(q => q.level === 3);
     else if (mode === "scenario") pool = pool.filter(q => q.type === "scenario");
@@ -30,6 +29,12 @@
     else if (mode === "recall") pool = pool.filter(q => q.type === "recall" || q.type === "concept");
     else if (mode === "mixed") pool = pool.filter(q => String(q.id).startsWith("x-"));
     else if (mode === "missed") pool = pool.filter(q => card(q.id) && card(q.id).w > 0 && card(q.id).b < 3);
+    return pool;
+  }
+  function pick(mode, chs, n) {
+    const now = Date.now();
+    let pool = poolFor(mode, chs);
+    if (!pool.length && chs.length) pool = poolFor(mode, []); // nothing in the ticked chapters: use the whole book
     if (mode === "review") {
       const due = shuffle(pool.filter(q => isDue(q.id, now))).sort((a, b) => card(a.id).b - card(b.id).b);
       const fresh = shuffle(pool.filter(q => !card(q.id))).sort((a, b) => a.level - b.level);
@@ -94,15 +99,28 @@
         <div><b>${streak()}</b><span>day streak</span></div>
       </div>
       <h2>Chapters</h2>
-      <p class="calc-note">Tick chapters to study only those. Leave all unticked to study the whole book.</p>
-      <div class="schs">${chs.map(x => `<label class="sch"><input type="checkbox" value="${x.ch.num}"${sel.includes(x.ch.num) ? " checked" : ""}><span class="n">${x.ch.num}</span><span class="t">${esc(x.ch.title)}<small>${x.n} questions, ${x.m} mastered${x.due ? ", " + x.due + " due" : ""}</small></span><span class="bar" aria-hidden="true"><i style="width:${Math.round(100 * x.m / x.n)}%"></i><em style="width:${Math.round(100 * (x.seen - x.m) / x.n)}%"></em></span></label>`).join("")}</div>
+      <p class="calc-note">Tap a chapter to open its questions right away. Tick boxes only if you want the buttons under Start to mix several chapters. With nothing ticked they use the whole book.</p>
+      <p class="sticked" id="sTicked"></p>
+      <div class="schs">${chs.map(x => `<div class="sch"><label class="sck" title="Include in a mixed session"><input type="checkbox" value="${x.ch.num}"${sel.includes(x.ch.num) ? " checked" : ""}></label><a class="sgo" href="#/study/run?mode=all&ch=${x.ch.num}"><span class="n">${x.ch.num}</span><span class="t">${esc(x.ch.title)}<small>${x.n} questions, ${x.m} mastered${x.due ? ", " + x.due + " due" : ""}</small></span><span class="bar" aria-hidden="true"><i style="width:${Math.round(100 * x.m / x.n)}%"></i><em style="width:${Math.round(100 * (x.seen - x.m) / x.n)}%"></em></span><span class="sopen">Open ›</span></a></div>`).join("")}</div>
       <div class="slen"><span>Questions per session</span>${[10, 20, 50, 100].map(n => `<button class="chip" data-n="${n}" aria-pressed="${n === nSel}">${n}</button>`).join("")}</div>
       <h2>Start</h2>
-      <div class="smodes">${modes.map(([m, t, d]) => `<button class="smode" data-mode="${m}"><b>${esc(t)}</b><span>${esc(d)}</span></button>`).join("")}</div>
+      <div class="smodes">${modes.map(([m, t, d]) => `<button class="smode" data-mode="${m}"><b>${esc(t)}</b><span>${esc(d)}</span><i class="scount" data-c="${m}"></i></button>`).join("")}</div>
       <div class="btnrow" style="margin-top:20px"><button class="linkbtn" id="sExport">Export my progress</button><label class="linkbtn" style="cursor:pointer">Import progress<input type="file" id="sImport" accept="application/json" hidden></label><button class="linkbtn" id="sReset">Reset progress</button></div>
       <div id="sResetConfirm" hidden class="warnbox">Reset all study progress on this device? <button class="linkbtn" id="sResetYes">Yes, reset</button> <button class="linkbtn" id="sResetNo">Keep it</button></div>
       <p class="credit">Questions written for this guide from the book's content. Progress is saved on this device.</p></div>`;
-    main.querySelectorAll(".sch input").forEach(cb => cb.onchange = () => { S.settings.ch = [...main.querySelectorAll(".sch input:checked")].map(x => +x.value); save(S); });
+    const counts = () => {
+      const ticked = S.settings.ch || [];
+      main.querySelectorAll("[data-c]").forEach(el => {
+        const m = el.dataset.c; let n = poolFor(m, ticked).length, whole = false;
+        if (!n && ticked.length) { n = poolFor(m, []).length; whole = true; }
+        el.textContent = n ? n.toLocaleString() + " questions" + (ticked.length ? (whole ? ", none in your ticked chapters so it opens the whole book" : " in your ticked chapters") : "") : (m === "missed" ? "none missed yet" : "none left");
+      });
+      const box = main.querySelector("#sTicked");
+      box.innerHTML = ticked.length ? `Ticked: chapter${ticked.length > 1 ? "s" : ""} ${ticked.sort((a, b) => a - b).join(", ")}. <button class="linkbtn" id="sClear">Clear ticks</button>` : "";
+      const c = box.querySelector("#sClear"); if (c) c.onclick = () => { S.settings.ch = []; save(S); main.querySelectorAll(".sch input").forEach(x => x.checked = false); counts(); };
+    };
+    main.querySelectorAll(".sch input").forEach(cb => cb.onchange = () => { S.settings.ch = [...main.querySelectorAll(".sch input:checked")].map(x => +x.value); save(S); counts(); });
+    counts();
     main.querySelectorAll("[data-n]").forEach(b => b.onclick = () => { S.settings.n = +b.dataset.n; save(S); main.querySelectorAll("[data-n]").forEach(x => x.setAttribute("aria-pressed", x === b)); });
     main.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { location.hash = `#/study/run?mode=${b.dataset.mode}`; });
     main.querySelector("#sExport").onclick = () => { const blob = new Blob([JSON.stringify({ app: "irrigation-field-guide-study", saved: new Date().toISOString(), S })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "field-guide-study-progress.json"; a.click(); };
