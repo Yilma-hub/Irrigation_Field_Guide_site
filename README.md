@@ -15,6 +15,10 @@ The book is licensed CC BY-NC-ND 4.0. Its text, figures and tables appear here u
 - A unit converter and the book's conversion pages
 - Search that groups answers: a quick answer, calculators, book passages, tables, figures, examples and your own notes
 - A notes box under every section and calculator, saved on the device, with export and import
+- A Workflow section with three flow diagrams (water management, system management and evaluation, design) connecting every calculator, plus a written explanation of how it all connects
+- On every calculator: what it is used for in the field, grower questions with worked answers, the related book figures, and the calculators that feed it and that it feeds
+- Study: over 2,000 multiple-choice questions from the book with spaced review, progress by chapter, figures and tables in the questions, and links back to the book and calculators
+- Notes on every unit in the converter: what it means, where it is used, and how the conversion factor is derived
 - Works offline after the first visit
 
 ## Put it on GitHub Pages
